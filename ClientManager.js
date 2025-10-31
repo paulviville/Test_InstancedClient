@@ -1,4 +1,4 @@
-import Messages from "../Test_InstancedServer/Test_Network/Messages.js";
+import Messages from "./Test_Network/Messages.js";
 import Commands from "./Test_Network/Commands.js";
 
 export default class ClientManager {
@@ -8,7 +8,8 @@ export default class ClientManager {
 	#commandsHandlers = {
 		[ Commands.SET_USER ]: this.#commandSetUser.bind( this ),
 		[ Commands.INSTANCE_LIST ]: this.#commandInstanceList.bind( this ),
-		// [ Commands.INSTANCE_NEW ]: this.#commandInstanceNew.bind( this ),
+		[ Commands.NEW_USER ]: this.#commandNewUser.bind( this ),
+		[ Commands.REMOVE_USER ]: this.#commandRemoveUser.bind( this ),
 	}
 
 	constructor ( ) {
@@ -19,7 +20,6 @@ export default class ClientManager {
 		console.log(`ClientManager - connect ${ port }`);
 
 		this.#socket = new WebSocket(`${ ip }:${ port }`);
-
 
 		this.#socket.onopen = this.#handleOnOpen.bind( this );
         this.#socket.onerror = this.#handleOnError.bind( this );
@@ -80,6 +80,18 @@ export default class ClientManager {
 		
 		console.log( instanceList );
 		/// update gui list?
+	}
+
+	#commandNewUser ( senderId, userId ) {
+		console.log( `ClientManager - #commandNewUser ${ senderId } ${ userId }` );
+		
+		console.log( userId );
+	}
+
+	#commandRemoveUser ( senderId, userId ) {
+		console.log( `ClientManager - #commandRemoveUser ${ senderId } ${ userId }` );
+		
+		console.log( userId );
 	}
 
 	requestNewInstance ( instanceName ) {

@@ -1,10 +1,6 @@
 
 import ClientManager from "./ClientManager.js";
 
-// socket.onopen = ( ) => { console.log("socket open")};
-// socket.onerror = ( ) => { console.log("socket error")};
-
-
 const clientManager = new ClientManager();
 
 clientManager.connect();
