@@ -8,6 +8,7 @@ export default class ClientManager {
 	#commandsHandlers = {
 		[ Commands.SET_USER ]: this.#commandSetUser.bind( this ),
 		[ Commands.INSTANCE_LIST ]: this.#commandInstanceList.bind( this ),
+		[ Commands.INSTANCE_NEW ]: this.#commandInstanceNew.bind( this ),
 		[ Commands.NEW_USER ]: this.#commandNewUser.bind( this ),
 		[ Commands.REMOVE_USER ]: this.#commandRemoveUser.bind( this ),
 	}
@@ -17,7 +18,7 @@ export default class ClientManager {
     }
 
 	connect ( port = 8080, ip = "ws://localhost" ) {
-		console.log(`ClientManager - connect ${ port }`);
+		console.log(`ClientManager - connect ${ip}:${ port }`);
 
 		this.#socket = new WebSocket(`${ ip }:${ port }`);
 
@@ -82,6 +83,13 @@ export default class ClientManager {
 		/// update gui list?
 	}
 
+	#commandInstanceNew ( senderId, data ) {
+		console.log( `ClientManager - #commandInstanceNew ${ senderId }` );
+		/// confirmation of requested creation of instance
+		
+		console.log( data );
+	}
+
 	#commandNewUser ( senderId, userId ) {
 		console.log( `ClientManager - #commandNewUser ${ senderId } ${ userId }` );
 		
@@ -110,6 +118,22 @@ export default class ClientManager {
 		console.log( `ClientManager - requestLeaveInstance ${ instanceName }` );
 
 		this.#send( Messages.leaveInstance( this.#userId, instanceName ) );
+	}
+
+	async loadFile ( path, fileName ) {
+		const filePath = `${ path }/${fileName}`;
+
+		fetch( filePath ).then( response => {
+			// console.log( response );
+			return response.text();
+		}).then( data => {
+			console.log( data );
+			this.#send( Messages.transferFile( this.#userId, fileName, data ) );
+		});
+	}
+
+	requestFile ( ) {
+
 	}
 
 
