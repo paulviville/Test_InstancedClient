@@ -11,6 +11,8 @@ export default class ClientManager {
 		[ Commands.INSTANCE_NEW ]: this.#commandInstanceNew.bind( this ),
 		[ Commands.NEW_USER ]: this.#commandNewUser.bind( this ),
 		[ Commands.REMOVE_USER ]: this.#commandRemoveUser.bind( this ),
+		[ Commands.FILE_LIST ]: this.#commandFilesList.bind( this ),
+		[ Commands.FILE_TRANSFER ]: this.#commandFileTransfer.bind( this ),
 	}
 
 	constructor ( ) {
@@ -56,7 +58,7 @@ export default class ClientManager {
 		console.log(`ClientManager - #handleOnMessage`);
 
 		const messageData = JSON.parse(message.data);
-		console.log( messageData );
+		// console.log( messageData );
 		
 		const handlerFunction = this.#commandsHandlers[ messageData.command ];
 		if ( handlerFunction ) {
@@ -67,8 +69,6 @@ export default class ClientManager {
 		}
 
     }
-
-
 
 	#commandSetUser ( senderId, data ) {
 		console.log(`ClientManager - #commandSetUser ${ senderId } ${ data }`);
@@ -102,6 +102,18 @@ export default class ClientManager {
 		console.log( userId );
 	}
 
+	#commandFilesList ( senderId, filesList ) {
+		console.log( `ClientManager - #commandFilesList ${ senderId }` );
+		
+		console.log( filesList );
+	}
+
+	#commandFileTransfer ( senderId, data ) {
+		console.log( `ClientManager - #commandFileTransfer ${ senderId }` );
+		
+		console.log( data.file );
+	}
+
 	requestNewInstance ( instanceName ) {
 		console.log( `ClientManager - requestNewInstance ${ instanceName }` );
 
@@ -120,6 +132,12 @@ export default class ClientManager {
 		this.#send( Messages.leaveInstance( this.#userId, instanceName ) );
 	}
 
+	requestFileRequest ( fileName ) {
+		console.log( `ClientManager - requestFileRequest ${ fileName }` );
+
+		this.#send( Messages.fileRequest( this.#userId, fileName ) );
+	}
+
 	async loadFile ( path, fileName ) {
 		const filePath = `${ path }/${fileName}`;
 
@@ -128,12 +146,8 @@ export default class ClientManager {
 			return response.text();
 		}).then( data => {
 			console.log( data );
-			this.#send( Messages.transferFile( this.#userId, fileName, data ) );
+			this.#send( Messages.fileTransfer( this.#userId, fileName, data ) );
 		});
-	}
-
-	requestFile ( ) {
-
 	}
 
 
