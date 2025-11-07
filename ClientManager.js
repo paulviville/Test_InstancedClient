@@ -111,7 +111,9 @@ export default class ClientManager {
 	#commandFileTransfer ( senderId, data ) {
 		console.log( `ClientManager - #commandFileTransfer ${ senderId }` );
 		
+		const decodedFile = Messages.decodeFile( data.file );
 		console.log( data.file );
+		console.log( decodedFile );
 	}
 
 	requestNewInstance ( instanceName ) {
@@ -139,15 +141,23 @@ export default class ClientManager {
 	}
 
 	async loadFile ( path, fileName ) {
-		const filePath = `${ path }/${fileName}`;
+		const filePath = `${ path }/${ fileName }`;
 
-		fetch( filePath ).then( response => {
-			// console.log( response );
-			return response.text();
-		}).then( data => {
-			console.log( data );
-			this.#send( Messages.fileTransfer( this.#userId, fileName, data ) );
-		});
+		// fetch( filePath ).then( response => {
+		// 	// console.log( response );
+		// 	return response.text();
+		// }).then( data => {
+		// 	console.log( data );
+		// 	this.#send( Messages.fileTransfer( this.#userId, fileName, data ) );
+		// });
+
+		const response = await fetch( filePath );
+		const fileBuffer = await response.arrayBuffer( );
+
+		const encodedFile = Messages.encodeFile( fileBuffer );
+		
+		this.#send( Messages.fileTransfer( this.#userId, fileName, encodedFile ) );
+		
 	}
 
 
