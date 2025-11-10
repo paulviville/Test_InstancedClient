@@ -1,5 +1,6 @@
 import Messages from "./Test_Network/Messages.js";
 import Commands from "./Test_Network/Commands.js";
+import { events, Events } from "./EventsController.js";
 
 export default class ClientManager {
 	#socket;
@@ -17,25 +18,32 @@ export default class ClientManager {
 
 	constructor ( ) {
 		console.log("ClientManager - constructor");
+
+		events.on( Events.requestConnection, ( { url, port } ) => { this.connect( url, port ); });
     }
 
-	connect ( port = 8080, ip = "ws://localhost" ) {
-		console.log(`ClientManager - connect ${ip}:${ port }`);
+	connect ( url = "ws://localhost", port = 8080 ) {
+		console.log(`ClientManager - connect ${url}:${ port }`);
 
-		this.#socket = new WebSocket(`${ ip }:${ port }`);
+		this.#socket = new WebSocket(`${ url }:${ port }`);
 
 		this.#socket.onopen = this.#handleOnOpen.bind( this );
         this.#socket.onerror = this.#handleOnError.bind( this );
         this.#socket.onmessage = this.#handleOnMessage.bind( this );
         this.#socket.onclose = this.#handleOnClose.bind( this );
+
 	}
 
 	disconnect ( ) {
+		console.log(`ClientManager - disconnect`);
+
 		this.#socket.close( );
 	}
 
     #handleOnOpen ( ) {
 		console.log(`ClientManager - #handleOnOpen`);
+
+		events.emit( Events.clientConnected );
     }
 
 	#handleOnError ( error ) {
@@ -52,6 +60,8 @@ export default class ClientManager {
         } else {
             console.warn('WebSocket connection closed unexpectedly.');
         }
+
+		events.emit( Events.clientDisconnected );
     }
 
 	#handleOnMessage ( message ) {
@@ -81,6 +91,8 @@ export default class ClientManager {
 		
 		console.log( instanceList );
 		/// update gui list?
+
+		events.emit( Events.instanceList, { instanceList });
 	}
 
 	#commandInstanceNew ( senderId, data ) {
@@ -112,7 +124,6 @@ export default class ClientManager {
 		console.log( `ClientManager - #commandFileTransfer ${ senderId }` );
 		
 		const decodedFile = Messages.decodeFile( data.file );
-		console.log( data.file );
 		console.log( decodedFile );
 	}
 
@@ -143,32 +154,13 @@ export default class ClientManager {
 	async loadFile ( path, fileName ) {
 		const filePath = `${ path }/${ fileName }`;
 
-		// fetch( filePath ).then( response => {
-		// 	// console.log( response );
-		// 	return response.text();
-		// }).then( data => {
-		// 	console.log( data );
-		// 	this.#send( Messages.fileTransfer( this.#userId, fileName, data ) );
-		// });
-
 		const response = await fetch( filePath );
 		const fileBuffer = await response.arrayBuffer( );
 
 		const encodedFile = Messages.encodeFile( fileBuffer );
 		
 		this.#send( Messages.fileTransfer( this.#userId, fileName, encodedFile ) );
-		
 	}
-
-
-	// #commandInstanceNew ( senderId, instanceName ) {
-	// 	console.log( `ServerManager - #commandInstanceNew ${ senderId } ${ instanceName }` );
-
-	// 	this.#instancesManager.newInstance( instanceName );
-
-	// 	const instancesList = this.#instancesManager.instancesData;
-	// 	this.#broadcast( Messages.instancesList( instancesList ) );
-	// }
 
 	#send ( message ) {
 		// console.log(`ClientManager - #send`);	
