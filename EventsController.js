@@ -7,15 +7,17 @@ export class EventsController extends EventTarget {
 	}
 
 	on ( eventName, callback ) {
+        console.log( `EventsController - on ${ eventName }` );
+
 		this.addEventListener( eventName, event => {
-			console.log(eventName, event)
 			callback( event.detail )
 		});
 	}
 
-	remove ( eventName ) {
+	// remove ( eventName ) {
+    //     console.log( `EventsController - remove ${ eventName }` );
 		
-	}
+	// }
 
 	emit ( eventName, detail = {} ) {
         console.log( `EventsController - emit ${ eventName }` );
@@ -29,9 +31,15 @@ export class EventsController extends EventTarget {
 
 export const events = new EventsController( );
 export class Events {
-	static requestConnection = "requestConnection";
-	static clientConnected = "clientConnected";
-	static clientDisconnected = "clientDisconnected";
+	static socketConnect = "socketConnect";
+	static socketDisconnect = "socketDisconnect";
+	static socketOpened = "socketOpened";
+	static socketClosed = "socketClosed";
+	static socketError = "socketError";
+
 	static fileList = "fileList";
 	static instanceList = "instanceList";
+	static instanceNew = "instanceNew"
+	static instanceJoin = "instanceJoin"
+	static instanceLeave = "instanceLeave"
 }

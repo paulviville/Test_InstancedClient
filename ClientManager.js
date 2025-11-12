@@ -19,7 +19,11 @@ export default class ClientManager {
 	constructor ( ) {
 		console.log("ClientManager - constructor");
 
-		events.on( Events.requestConnection, ( { url, port } ) => { this.connect( url, port ); });
+		events.on( Events.socketConnect, ( { url, port } ) => { this.connect( url, port ); });
+		events.on( Events.socketDisconnect, ( { url, port } ) => { this.disconnect( url, port ); });
+		events.on( Events.instanceJoin, ( { instanceName } ) => { this.requestJoinInstance( instanceName ); });
+		events.on( Events.instanceLeave, ( { instanceName } ) => { this.requestLeaveInstance( instanceName ); });
+		events.on( Events.instanceNew, ( { instanceName } ) => { this.requestNewInstance( instanceName ); });
     }
 
 	connect ( url = "ws://localhost", port = 8080 ) {
@@ -43,13 +47,15 @@ export default class ClientManager {
     #handleOnOpen ( ) {
 		console.log(`ClientManager - #handleOnOpen`);
 
-		events.emit( Events.clientConnected );
+		events.emit( Events.socketOpened );
     }
 
 	#handleOnError ( error ) {
 		console.log(`ClientManager - #handleOnError`);
 
         console.error('WebSocket error:', error);
+		events.emit( Events.socketError );
+
     }
 
 	#handleOnClose ( event ) {
@@ -61,7 +67,7 @@ export default class ClientManager {
             console.warn('WebSocket connection closed unexpectedly.');
         }
 
-		events.emit( Events.clientDisconnected );
+		events.emit( Events.socketClosed );
     }
 
 	#handleOnMessage ( message ) {
@@ -86,13 +92,13 @@ export default class ClientManager {
 		this.#userId = data.userId;
 	}
 
-	#commandInstanceList ( senderId, instanceList ) {
+	#commandInstanceList ( senderId, data ) {
 		console.log( `ClientManager - #commandInstanceList ${ senderId }` );
 		
-		console.log( instanceList );
+		console.log( data.instancesList );
 		/// update gui list?
 
-		events.emit( Events.instanceList, { instanceList });
+		events.emit( Events.instanceList, { instancesList: data.instancesList });
 	}
 
 	#commandInstanceNew ( senderId, data ) {
@@ -114,10 +120,11 @@ export default class ClientManager {
 		console.log( userId );
 	}
 
-	#commandFilesList ( senderId, filesList ) {
+	#commandFilesList ( senderId, data ) {
 		console.log( `ClientManager - #commandFilesList ${ senderId }` );
 		
-		console.log( filesList );
+		console.log( data.filesList );
+		events.emit( Events.fileList, { filesList: data.filesList });
 	}
 
 	#commandFileTransfer ( senderId, data ) {
