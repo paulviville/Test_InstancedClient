@@ -24,6 +24,9 @@ export default class ClientManager {
 		events.on( Events.instanceJoin, ( { instanceName } ) => { this.requestJoinInstance( instanceName ); });
 		events.on( Events.instanceLeave, ( { instanceName } ) => { this.requestLeaveInstance( instanceName ); });
 		events.on( Events.instanceNew, ( { instanceName } ) => { this.requestNewInstance( instanceName ); });
+		events.on( Events.instanceFileLoad, ( { instanceName, fileName } ) => { this.requestInstanceLoadFile( instanceName, fileName ); });
+		events.on( Events.fileRequest, ( { fileName } ) => { this.requestFileRequest( fileName ); });
+		events.on( Events.fileUpload, ( { fileName, fileBuffer } ) => { this.requestFileTransfer( fileName, fileBuffer ); });
     }
 
 	connect ( url = "ws://localhost", port = 8080 ) {
@@ -122,8 +125,7 @@ export default class ClientManager {
 
 	#commandFilesList ( senderId, data ) {
 		console.log( `ClientManager - #commandFilesList ${ senderId }` );
-		
-		console.log( data.filesList );
+
 		events.emit( Events.fileList, { filesList: data.filesList });
 	}
 
@@ -146,6 +148,12 @@ export default class ClientManager {
 		this.#send( Messages.joinInstance( this.#userId, instanceName ) );
 	}
 
+	requestInstanceLoadFile ( instanceName, fileName ) {
+		console.log( `ClientManager - requestInstanceLoadFile ${ instanceName } ${ fileName }` );
+
+		this.#send( Messages.instanceLoadFile( this.#userId, instanceName, fileName ) );
+	}
+
 	requestLeaveInstance ( instanceName ) {
 		console.log( `ClientManager - requestLeaveInstance ${ instanceName }` );
 
@@ -158,6 +166,13 @@ export default class ClientManager {
 		this.#send( Messages.fileRequest( this.#userId, fileName ) );
 	}
 
+	requestFileTransfer ( fileName, fileBuffer ) {
+		console.log( `ClientManager - requestFileTransfer ${ fileName }` );
+
+		const encodedFile = Messages.encodeFile( fileBuffer );
+		this.#send( Messages.fileTransfer( this.#userId, fileName, encodedFile ) );
+	}
+
 	async loadFile ( path, fileName ) {
 		const filePath = `${ path }/${ fileName }`;
 
@@ -165,7 +180,6 @@ export default class ClientManager {
 		const fileBuffer = await response.arrayBuffer( );
 
 		const encodedFile = Messages.encodeFile( fileBuffer );
-		
 		this.#send( Messages.fileTransfer( this.#userId, fileName, encodedFile ) );
 	}
 

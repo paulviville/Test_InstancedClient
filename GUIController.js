@@ -17,7 +17,7 @@ export default class GUIController {
 		},
 		instances: {
 			folder: this.#gui.addFolder( "Instances" ),
-			subfolders: {},
+			subfolders: { },
 			gui: { },
 			data: {
 				newInstance: "",
@@ -31,10 +31,14 @@ export default class GUIController {
 		},
 		files: {
 			folder: this.#gui.addFolder( "Files" ),
+			subfolders: { },
 			gui: { },
 			data: { 
 				select: null,
 				files: {},
+				request: ( ) => this.#handleFileRequest( ),
+				load: ( ) => this.#handleLoadFile( ),
+				loadInstance: ( ) => this.#handleInstanceLoadFile( ),
 			},
 		},
 	}
@@ -44,6 +48,7 @@ export default class GUIController {
 
 		this.#createConnectionFolder( );
 		this.#createInstancesFolder( );
+		this.#createFilesFolder( );
 		this.#folders.instances.folder.hide( );
 		this.#folders.files.folder.hide( );
 
@@ -83,7 +88,7 @@ export default class GUIController {
 			this.#folders.instances.subfolders.create.show( );
 		});
 
-		events.on( Events.fileList, ( { fileList } ) => { this.#updateFilesList( fileList ) });
+		events.on( Events.fileList, ( { filesList } ) => { this.#updateFilesList( filesList ) });
 
 	}
 
@@ -118,6 +123,26 @@ export default class GUIController {
 		gui.selectedName.hide( );
 	}
 
+	#createFilesFolder ( ) {
+		const folder = this.#folders.files.folder;
+		const gui = this.#folders.files.gui;
+		const data = this.#folders.files.data;
+
+		const subfolder = folder.addFolder( "server files" );
+		this.#folders.files.subfolders.serverFiles = subfolder;
+		// gui.newInstance = subfolder.add( data, "newInstance" );
+		gui.request = subfolder.add( data, "request" );
+		// gui.selectedName = folder.add( data, "selectedName" ).listen().disable();
+		// gui.join = folder.add( data, "join" );
+		// gui.leave = folder.add( data, "leave" );
+
+		// gui.leave.hide( );
+		// gui.selectedName.hide( );
+
+		folder.add( data, "load" );
+		subfolder.add( data, "loadInstance" );
+	}
+
 	#updateInstanceList ( instanceList ) {
         console.log( `GUIController - #updateInstanceList` );
 
@@ -148,6 +173,7 @@ export default class GUIController {
         console.log( `GUIController - #updateFilesList` );
 
 		const folder = this.#folders.files.folder;
+		const subfolders = this.#folders.files.subfolders;
 		const data = this.#folders.files.data;
 		const gui = this.#folders.files.gui;
 
@@ -155,7 +181,15 @@ export default class GUIController {
 			gui.filesList.destroy( );
 		}
 
-		// data.files = 
+		console.log(filesList)
+		data.files = { };
+		for ( const file of filesList ) {
+			data.files[ file.name ] = file.name;
+		}
+		gui.filesList = subfolders.serverFiles.add( data, "select", data.files ).name("");
+		gui.filesList.onChange ( ( value ) => {
+			data.select = value;
+		});
 	}
 
 	#handleConnect ( ) {
@@ -221,5 +255,59 @@ export default class GUIController {
 
 	}
 
+	#handleFileRequest ( ) {
+        console.log( `GUIController - #handleFileRequest` );
 
+		const fileName = this.#folders.files.data.select;
+		console.log(fileName)
+		if ( fileName ) {
+			events.emit( Events.fileRequest, { fileName: fileName } );
+		}
+		
+	}
+
+	#handleLoadFile ( ) {
+        console.log( `GUIController - #handleLoadFile` );
+
+		const input = document.createElement( "input" );
+		input.type = "file";
+
+		input.onchange = ( ) => {
+			console.log( input.files[0] );
+
+			const file = input.files[ 0 ];
+			if ( !file ) {
+				return; 
+			}
+
+			const fileReader = new FileReader( );
+			fileReader.onload = ( ) => {
+				console.log({
+					name: file.name,
+					type: file.type,
+					size: file.size,
+					content: fileReader.result,
+				});
+
+				events.emit( Events.fileUpload, { fileName: file.name, fileBuffer: fileReader.result });
+			};
+			
+			fileReader.readAsArrayBuffer( file )
+		};
+
+		input.click();
+		// const fileName = this.#folders.files.data.select;
+		// console.log(fileName)
+		// if ( fileName ) {
+		// 	events.emit( Events.fileRequest, { fileName: fileName } );
+		// }
+		
+	}
+
+	#handleInstanceLoadFile ( ) {
+        console.log( `GUIController - #handleInstanceLoadFile` );
+
+		events.emit( Events.instanceFileLoad, { });
+		
+	}
 }

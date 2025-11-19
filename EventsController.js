@@ -38,8 +38,13 @@ export class Events {
 	static socketError = "socketError";
 
 	static fileList = "fileList";
+	static fileRequest = "fileRequest";
+	static fileDownload = "fileDownload";
+	static fileUpload = "fileUpload";
+
 	static instanceList = "instanceList";
 	static instanceNew = "instanceNew"
 	static instanceJoin = "instanceJoin"
 	static instanceLeave = "instanceLeave"
+	static instanceFileLoad = "instanceFileLoad"
 }
